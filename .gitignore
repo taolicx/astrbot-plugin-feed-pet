@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+CODEX_CONTEXT.txt
+CODEX_CONTEXT.bin.txt
+*.codex.txt
+*.codex.bin.txt
+.codex-sidecar
