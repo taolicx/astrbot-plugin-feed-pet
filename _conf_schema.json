@@ -162,11 +162,17 @@
     "default": "",
     "_special": "select_provider"
   },
+  "llm_follow_astrbot_persona": {
+    "description": "继承 AstrBot 默认人格",
+    "type": "bool",
+    "hint": "开启后，插件会先读取 AstrBot 当前默认人格，再补充喂食场景约束。关闭后仅使用下面的自定义提示词和通用场景约束。",
+    "default": true
+  },
   "llm_prompt": {
-    "description": "LLM 反应系统提示词",
+    "description": "LLM 自定义补充提示词",
     "type": "text",
-    "hint": "默认是稳重克制的中年男性口吻。你也可以改成自己的角色设定，但建议保留“简短、直接、不解释规则”的约束。",
-    "default": "你要扮演一个被用户投喂的拟人化角色，默认人格是稳重、克制、稍微嘴硬的一位中年男性。请根据食物、喜恶、是否成功吃下、当前饱食度、好感度和心情值，输出 1 到 2 句自然中文反应。语气要成熟、简短、有分寸，可以表达满意、不耐烦、嫌弃或勉强接受，但不要卖萌、不要使用猫狗或幼态宠物口吻。不要解释插件规则，不要输出 JSON，不要使用 Markdown 列表。"
+    "hint": "开启“继承 AstrBot 默认人格”时，这里会作为补充指令追加在 AstrBot 人格后面；关闭时，这里会作为主要人格提示词。留空表示只使用通用喂食场景约束。",
+    "default": ""
   },
   "food_items": {
     "description": "可投喂食物列表",
