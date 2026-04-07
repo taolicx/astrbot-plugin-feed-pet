@@ -36,8 +36,8 @@ class FoodItem:
     "PetFeeder",
     "Codex",
     "可配置食物、饱食度和 LLM 反应的喂食插件",
-    "1.1.0",
-    "https://github.com/yourname/astrbot-plugin-feed-pet",
+    "1.2.0",
+    "https://github.com/taolicx/astrbot-plugin-feed-pet",
 )
 class PetFeederPlugin(Star):
     # 主流程是“读当前会话状态 -> 应用衰减 -> 判断能不能吃 -> 更新状态 -> 生成反应”。
@@ -185,16 +185,51 @@ class PetFeederPlugin(Star):
     def _llm_provider_id(self) -> str:
         return self._get_text("llm_provider_id", "")
 
-    def _llm_prompt(self) -> str:
-        return self._get_text(
-            "llm_prompt",
-            (
-                "你要扮演一个被用户投喂的拟人化角色，默认人格是稳重、克制、稍微嘴硬的一位中年男性。"
-                "请根据食物、喜恶、是否成功吃下、当前饱食度、好感度和心情值，输出 1 到 2 句自然中文反应。"
-                "语气要成熟、简短、有分寸，可以表达满意、不耐烦、嫌弃或勉强接受，但不要卖萌、不要使用猫狗或幼态宠物口吻。"
-                "不要解释插件规则，不要输出 JSON，不要使用 Markdown 列表。"
-            ),
+    def _llm_follow_astrbot_persona(self) -> bool:
+        return self._get_bool("llm_follow_astrbot_persona", True)
+
+    def _llm_custom_prompt(self) -> str:
+        return self._get_text("llm_prompt", "")
+
+    def _llm_scene_prompt(self) -> str:
+        return (
+            "你正在处理一次投喂互动场景。请根据食物、喜恶、是否成功吃下、当前饱食度、好感度和心情值，"
+            "输出 1 到 2 句自然中文反应。回答要简短、直接、有情绪，不要解释插件规则，"
+            "不要输出 JSON，不要使用 Markdown 列表。"
         )
+
+    async def _get_astrbot_persona_prompt(self) -> str:
+        persona_manager = getattr(self.context, "persona_manager", None)
+        if persona_manager is None:
+            return ""
+        try:
+            persona = await persona_manager.get_default_persona_v3()
+        except Exception:
+            return ""
+        if isinstance(persona, dict):
+            return str(persona.get("prompt") or "").strip()
+        return str(getattr(persona, "prompt", "") or "").strip()
+
+    async def _build_llm_system_prompt(self) -> str:
+        # 角色人格和场景约束拆开处理，避免每换一个用户人设都要改插件源码。
+        parts: list[str] = []
+        if self._llm_follow_astrbot_persona():
+            persona_prompt = await self._get_astrbot_persona_prompt()
+            if persona_prompt:
+                parts.append(persona_prompt)
+
+        custom_prompt = self._llm_custom_prompt()
+        if custom_prompt:
+            if parts:
+                parts.append(f"以下是这次喂食互动的附加要求，请在保留原人格的前提下遵守：\n{custom_prompt}")
+            else:
+                parts.append(custom_prompt)
+
+        if not parts:
+            parts.append("你要扮演一个正在回应用户投喂行为的角色。")
+
+        parts.append(self._llm_scene_prompt())
+        return "\n\n".join(part for part in parts if part)
 
     def _clamp_satiety(self, value: float) -> float:
         return max(0.0, min(float(value), self._max_satiety()))
@@ -692,9 +727,9 @@ class PetFeederPlugin(Star):
 
         if outcome == OUTCOME_ACCEPTED and food is not None:
             reaction = (
-                f"{pet_name}看了一眼{food_name}，神色缓了些，接过来慢慢吃掉了。"
+                f"{pet_name}接过{food_name}，看起来明显高兴了些。"
                 if food.preference == "like"
-                else f"{pet_name}把{food_name}吃掉了，语气平淡地表示还行。"
+                else f"{pet_name}把{food_name}吃掉了，看起来还算满意。"
             )
             if food.accept_hint:
                 reaction = f"{reaction}\n{food.accept_hint}"
@@ -711,7 +746,7 @@ class PetFeederPlugin(Star):
         if outcome == OUTCOME_TOO_FULL:
             extra = f"\n{food.refuse_hint}" if food and food.refuse_hint else ""
             return (
-                f"{pet_name}抬手挡了挡，表示已经吃不下了，不肯再碰{food_name}。{extra}\n"
+                f"{pet_name}摆了摆手，表示已经吃不下了，不肯再碰{food_name}。{extra}\n"
                 f"本次心情 {self._format_number(abs(mood_delta))} 点波动，当前心情值 "
                 f"{self._format_number(mood_after)}/{self._format_number(self._max_mood())}。"
             )
@@ -719,14 +754,14 @@ class PetFeederPlugin(Star):
         if outcome == OUTCOME_DISLIKED:
             extra = f"\n{food.refuse_hint}" if food and food.refuse_hint else ""
             return (
-                f"{pet_name}看了看{food_name}就皱起眉，直接表示不想吃。{extra}\n"
+                f"{pet_name}看了看{food_name}，明显不想吃。{extra}\n"
                 f"{food_name} 被标记为“不喜欢”，本次没有增加饱食度，"
                 f"好感 {self._format_number(abs(favorability_delta))} 点、心情 {self._format_number(abs(mood_delta))} 点发生了下滑。"
             )
 
         return (
-            f"{pet_name}盯着“{food_query}”看了一会儿，表示自己没见过这种东西，不打算随便入口。\n"
-            f"他的心情略微受到了影响，当前好感度 {self._format_number(favorability_after)}/{self._format_number(self._max_favorability())}，"
+            f"{pet_name}盯着“{food_query}”看了一会儿，表示自己没见过这种食物，不打算随便入口。\n"
+            f"当前好感度 {self._format_number(favorability_after)}/{self._format_number(self._max_favorability())}，"
             f"心情值 {self._format_number(mood_after)}/{self._format_number(self._max_mood())}。\n"
             "请先在插件配置里添加这类食物，或使用“喂食帮助”查看当前可投喂列表。"
         )
@@ -772,7 +807,7 @@ class PetFeederPlugin(Star):
         food_name = food.name if food else food_query
         prompt = "\n".join(
             [
-                f"宠物名字：{self._pet_name()}",
+                f"角色名字：{self._pet_name()}",
                 f"动作结果：{outcome}",
                 f"食物：{food_name}",
                 f"食物偏好：{self._preference_label(food.preference) if food else '未知'}",
@@ -784,11 +819,14 @@ class PetFeederPlugin(Star):
                 f"进食前心情值：{self._format_number(mood_before)} / {self._format_number(self._max_mood())}",
                 f"进食后心情值：{self._format_number(mood_after)} / {self._format_number(self._max_mood())}",
                 f"拒食阈值：{self._format_number(self._refuse_threshold())}",
-                "请直接输出宠物当场的说话或反应，不要解释系统规则。",
+                "请直接输出该角色当场的说话或反应，不要解释系统规则。",
             ]
         )
         try:
-            response = await provider.text_chat(system_prompt=self._llm_prompt(), prompt=prompt)
+            response = await provider.text_chat(
+                system_prompt=await self._build_llm_system_prompt(),
+                prompt=prompt,
+            )
             text = str(getattr(response, "completion_text", "") or "").strip()
             return text or fallback
         except Exception as exc:
