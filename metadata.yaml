@@ -1,0 +1,6 @@
+name: PetFeeder
+author: Codex
+description: 可自定义食物、饱食度、好感度、心情值和 LLM 反应的 AstrBot 喂食插件
+help: 发送“投喂 食物名”开始喂食，使用“喂食状态”“好感度”“心情值”和“喂食帮助”查看详情
+version: 1.1.0
+repo: https://github.com/yourname/astrbot-plugin-feed-pet
