@@ -189,8 +189,10 @@ class PetFeederPlugin(Star):
         return self._get_text(
             "llm_prompt",
             (
-                "你要扮演一个被用户投喂的虚拟宠物。请根据食物、喜恶、是否成功吃下、当前饱食度，"
-                "输出 1 到 2 句自然中文反应。不要解释插件规则，不要输出 JSON，不要使用 Markdown 列表。"
+                "你要扮演一个被用户投喂的拟人化角色，默认人格是稳重、克制、稍微嘴硬的一位中年男性。"
+                "请根据食物、喜恶、是否成功吃下、当前饱食度、好感度和心情值，输出 1 到 2 句自然中文反应。"
+                "语气要成熟、简短、有分寸，可以表达满意、不耐烦、嫌弃或勉强接受，但不要卖萌、不要使用猫狗或幼态宠物口吻。"
+                "不要解释插件规则，不要输出 JSON，不要使用 Markdown 列表。"
             ),
         )
 
@@ -690,9 +692,9 @@ class PetFeederPlugin(Star):
 
         if outcome == OUTCOME_ACCEPTED and food is not None:
             reaction = (
-                f"{pet_name}眼睛一下亮了，开心地把{food_name}吃掉了。"
+                f"{pet_name}看了一眼{food_name}，神色缓了些，接过来慢慢吃掉了。"
                 if food.preference == "like"
-                else f"{pet_name}认真地吃掉了{food_name}，看起来还算满意。"
+                else f"{pet_name}把{food_name}吃掉了，语气平淡地表示还行。"
             )
             if food.accept_hint:
                 reaction = f"{reaction}\n{food.accept_hint}"
@@ -709,7 +711,7 @@ class PetFeederPlugin(Star):
         if outcome == OUTCOME_TOO_FULL:
             extra = f"\n{food.refuse_hint}" if food and food.refuse_hint else ""
             return (
-                f"{pet_name}已经吃得肚子圆滚滚了，摇着脑袋拒绝再吃{food_name}。{extra}\n"
+                f"{pet_name}抬手挡了挡，表示已经吃不下了，不肯再碰{food_name}。{extra}\n"
                 f"本次心情 {self._format_number(abs(mood_delta))} 点波动，当前心情值 "
                 f"{self._format_number(mood_after)}/{self._format_number(self._max_mood())}。"
             )
@@ -717,14 +719,14 @@ class PetFeederPlugin(Star):
         if outcome == OUTCOME_DISLIKED:
             extra = f"\n{food.refuse_hint}" if food and food.refuse_hint else ""
             return (
-                f"{pet_name}闻了闻{food_name}，立刻把头扭开了，完全不想吃。{extra}\n"
+                f"{pet_name}看了看{food_name}就皱起眉，直接表示不想吃。{extra}\n"
                 f"{food_name} 被标记为“不喜欢”，本次没有增加饱食度，"
                 f"好感 {self._format_number(abs(favorability_delta))} 点、心情 {self._format_number(abs(mood_delta))} 点发生了下滑。"
             )
 
         return (
-            f"{pet_name}盯着“{food_query}”看了半天，像是在说自己没见过这种食物。\n"
-            f"它的心情略微受到了影响，当前好感度 {self._format_number(favorability_after)}/{self._format_number(self._max_favorability())}，"
+            f"{pet_name}盯着“{food_query}”看了一会儿，表示自己没见过这种东西，不打算随便入口。\n"
+            f"他的心情略微受到了影响，当前好感度 {self._format_number(favorability_after)}/{self._format_number(self._max_favorability())}，"
             f"心情值 {self._format_number(mood_after)}/{self._format_number(self._max_mood())}。\n"
             "请先在插件配置里添加这类食物，或使用“喂食帮助”查看当前可投喂列表。"
         )
