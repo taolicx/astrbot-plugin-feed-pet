@@ -1,0 +1,293 @@
+{
+  "enabled": {
+    "description": "启用插件",
+    "type": "bool",
+    "hint": "关闭后，所有喂食命令都会直接失效。",
+    "default": true
+  },
+  "ignore_self_messages": {
+    "description": "忽略机器人自己发送的消息",
+    "type": "bool",
+    "hint": "建议开启，避免机器人自己的消息再次触发命令。",
+    "default": true
+  },
+  "allow_private_chat": {
+    "description": "允许私聊使用",
+    "type": "bool",
+    "hint": "关闭后，只能在群聊里投喂和查看状态。",
+    "default": true
+  },
+  "pet_name": {
+    "description": "宠物名字",
+    "type": "string",
+    "hint": "用于状态展示和 LLM 提示词里的角色名。",
+    "default": "团子"
+  },
+  "initial_satiety": {
+    "description": "初始饱食度",
+    "type": "int",
+    "hint": "新会话第一次出现时的起始饱食度。",
+    "default": 20
+  },
+  "max_satiety": {
+    "description": "最大饱食度",
+    "type": "int",
+    "hint": "所有加成都会被限制在这个上限内。",
+    "default": 100
+  },
+  "refuse_threshold": {
+    "description": "拒食阈值",
+    "type": "float",
+    "hint": "当前饱食度达到或超过这个值时，宠物会因为太撑而拒绝进食。",
+    "default": 90
+  },
+  "satiety_decay_per_hour": {
+    "description": "每小时饱食度衰减",
+    "type": "float",
+    "hint": "为了避免吃撑后永久卡死，宠物会随时间自然变饿。",
+    "default": 6
+  },
+  "initial_favorability": {
+    "description": "初始好感度",
+    "type": "int",
+    "hint": "新会话第一次出现时的起始好感度。",
+    "default": 50
+  },
+  "max_favorability": {
+    "description": "最大好感度",
+    "type": "int",
+    "hint": "好感度变化会被限制在这个上限内。",
+    "default": 100
+  },
+  "initial_mood": {
+    "description": "初始心情值",
+    "type": "int",
+    "hint": "宠物的常态心情基线。",
+    "default": 60
+  },
+  "max_mood": {
+    "description": "最大心情值",
+    "type": "int",
+    "hint": "心情值变化会被限制在这个上限内。",
+    "default": 100
+  },
+  "mood_recovery_per_hour": {
+    "description": "每小时心情回稳",
+    "type": "float",
+    "hint": "心情值会缓慢向初始心情值靠拢，避免一次投喂永久改变心情。",
+    "default": 4
+  },
+  "feed_cooldown_seconds": {
+    "description": "投喂冷却秒数",
+    "type": "float",
+    "hint": "同一用户在同一会话里每次投喂之间需要等待的秒数，填 0 表示关闭。",
+    "default": 30
+  },
+  "require_admin_to_feed": {
+    "description": "仅管理员可投喂",
+    "type": "bool",
+    "hint": "开启后，群聊里只有管理员能投喂；私聊不受这个限制。",
+    "default": false
+  },
+  "allowed_user_ids": {
+    "description": "允许投喂用户列表",
+    "type": "text",
+    "hint": "可用逗号或换行分隔用户 ID。留空表示不启用白名单。",
+    "default": ""
+  },
+  "blocked_user_ids": {
+    "description": "禁止投喂用户列表",
+    "type": "text",
+    "hint": "黑名单优先级高于白名单，可用逗号或换行分隔用户 ID。",
+    "default": ""
+  },
+  "unknown_favorability_penalty": {
+    "description": "未知食物好感惩罚",
+    "type": "float",
+    "hint": "喂未配置食物时扣除的好感度。",
+    "default": 1
+  },
+  "unknown_mood_penalty": {
+    "description": "未知食物心情惩罚",
+    "type": "float",
+    "hint": "喂未配置食物时扣除的心情值。",
+    "default": 2
+  },
+  "disliked_favorability_penalty": {
+    "description": "讨厌食物好感惩罚",
+    "type": "float",
+    "hint": "喂到讨厌食物时扣除的好感度。",
+    "default": 2
+  },
+  "disliked_mood_penalty": {
+    "description": "讨厌食物心情惩罚",
+    "type": "float",
+    "hint": "喂到讨厌食物时扣除的心情值。",
+    "default": 6
+  },
+  "too_full_favorability_penalty": {
+    "description": "吃撑拒食好感惩罚",
+    "type": "float",
+    "hint": "宠物吃撑后仍被继续投喂时扣除的好感度。",
+    "default": 0
+  },
+  "too_full_mood_penalty": {
+    "description": "吃撑拒食心情惩罚",
+    "type": "float",
+    "hint": "宠物吃撑后仍被继续投喂时扣除的心情值。",
+    "default": 3
+  },
+  "allow_reset_command": {
+    "description": "允许使用喂食重置命令",
+    "type": "bool",
+    "hint": "开启后，可用“喂食重置”把当前会话宠物状态恢复到初始值。",
+    "default": true
+  },
+  "reset_requires_admin": {
+    "description": "群聊重置仅管理员可用",
+    "type": "bool",
+    "hint": "私聊不受这个限制，群聊里开启后只有管理员能重置。",
+    "default": true
+  },
+  "llm_enabled": {
+    "description": "启用 LLM 反应",
+    "type": "bool",
+    "hint": "关闭后会退回内置模板文案，但主逻辑仍然生效。",
+    "default": true
+  },
+  "llm_provider_id": {
+    "description": "LLM Provider ID",
+    "type": "string",
+    "hint": "留空时默认跟随当前正在使用的聊天模型。",
+    "default": "",
+    "_special": "select_provider"
+  },
+  "llm_prompt": {
+    "description": "LLM 反应系统提示词",
+    "type": "text",
+    "hint": "可以改成你自己的宠物性格设定，但建议保留“简短、直接、不解释规则”的约束。",
+    "default": "你要扮演一个被用户投喂的虚拟宠物。请根据食物、喜恶、是否成功吃下、当前饱食度、好感度和心情值，输出 1 到 2 句自然中文反应。语气像宠物当场给出的反馈，可以可爱，但不要解释插件规则。不要输出 JSON，不要使用 Markdown 列表。"
+  },
+  "food_items": {
+    "description": "可投喂食物列表",
+    "type": "template_list",
+    "hint": "每个食物都可以自定义别名、增加的饱食度、好感和心情变化、喜恶以及个性化提示。",
+    "default": [
+      {
+        "__template_key": "food_item",
+        "name": "苹果",
+        "aliases": "apple",
+        "satiety_gain": 12,
+        "favorability_gain": 2,
+        "mood_gain": 4,
+        "preference": "like",
+        "note": "清甜脆口。",
+        "accept_hint": "",
+        "refuse_hint": ""
+      },
+      {
+        "__template_key": "food_item",
+        "name": "小鱼干",
+        "aliases": "鱼干\nfish",
+        "satiety_gain": 22,
+        "favorability_gain": 3,
+        "mood_gain": 6,
+        "preference": "like",
+        "note": "闻起来很香。",
+        "accept_hint": "",
+        "refuse_hint": ""
+      },
+      {
+        "__template_key": "food_item",
+        "name": "饼干",
+        "aliases": "cookie\n小饼干",
+        "satiety_gain": 10,
+        "favorability_gain": 1,
+        "mood_gain": 2,
+        "preference": "neutral",
+        "note": "普通零食。",
+        "accept_hint": "",
+        "refuse_hint": ""
+      },
+      {
+        "__template_key": "food_item",
+        "name": "苦瓜",
+        "aliases": "bitter melon",
+        "satiety_gain": 8,
+        "favorability_gain": 0,
+        "mood_gain": 0,
+        "preference": "dislike",
+        "note": "它一闻就想跑。",
+        "accept_hint": "",
+        "refuse_hint": "这东西它是真的不想碰。"
+      }
+    ],
+    "templates": {
+      "food_item": {
+        "name": "食物项",
+        "hint": "定义一个可投喂食物。",
+        "items": {
+          "name": {
+            "description": "食物名",
+            "type": "string",
+            "hint": "用户默认投喂时识别的名字。",
+            "default": ""
+          },
+          "aliases": {
+            "description": "食物别名",
+            "type": "text",
+            "hint": "可用逗号或换行分隔，例如 apple, 苹果片。",
+            "default": ""
+          },
+          "satiety_gain": {
+            "description": "增加的饱食度",
+            "type": "int",
+            "hint": "只有真正吃下去时才会增加。",
+            "default": 10
+          },
+          "favorability_gain": {
+            "description": "增加的好感度",
+            "type": "int",
+            "hint": "成功吃下该食物时增加的好感度。",
+            "default": 1
+          },
+          "mood_gain": {
+            "description": "增加的心情值",
+            "type": "int",
+            "hint": "成功吃下该食物时增加的心情值。",
+            "default": 2
+          },
+          "preference": {
+            "description": "喜好程度",
+            "type": "string",
+            "hint": "dislike 会直接拒绝进食。",
+            "options": [
+              "like",
+              "neutral",
+              "dislike"
+            ],
+            "default": "neutral"
+          },
+          "note": {
+            "description": "食物备注",
+            "type": "text",
+            "hint": "会传给 LLM，帮助它生成更贴合的反应。",
+            "default": ""
+          },
+          "accept_hint": {
+            "description": "吃下时附加提示",
+            "type": "text",
+            "hint": "可选，不想走 LLM 时也会拼接到模板文案里。",
+            "default": ""
+          },
+          "refuse_hint": {
+            "description": "拒绝时附加提示",
+            "type": "text",
+            "hint": "可选，适合写挑食理由或角色设定。",
+            "default": ""
+          }
+        }
+      }
+    }
+  }
+}
